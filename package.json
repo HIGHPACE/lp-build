@@ -7,6 +7,11 @@
   "bin": {
     "lp-build-scss-targets": "bin/scss-targets.js"
   },
+  "files": [
+    "index.js",
+    "lib",
+    "bin"
+  ],
   "engines": {
     "node": ">=22"
   },
@@ -29,5 +34,10 @@
     "postcss": "8.5.24",
     "sass": "1.69.0",
     "sharp": "0.35.3"
+  },
+  "overrides": {
+    "browserslist": "4.28.7",
+    "caniuse-lite": "1.0.30001806",
+    "postcss": "8.5.24"
   }
 }
