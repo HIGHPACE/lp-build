@@ -33,7 +33,7 @@ autoprefixer）、画像圧縮、webp 生成、BrowserSync による監視を提
   },
   "devDependencies": {
     "gulp": "4.0.2",
-    "@highpace/lp-build": "github:HIGHPACE/lp-build#v1.0.0"
+    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.0.0"
   }
 }
 ```
@@ -92,6 +92,21 @@ SCSS は `['./**/*.scss', '!./**/_*.scss', '!./node_modules/**']` の1本で全�
 `images` は `gulp-changed` で `srcImg` 側が新しいものだけ処理し、`webp` は出力が既に
 存在する場合はスキップする。これがないと `npm run dev` を1回実行しただけで既存の
 全画像が新しい設定で再圧縮され、バイナリが全差分になる。
+
+## このリポジトリを public にしている理由
+
+git 依存として参照するため、**各プロジェクトの CI がこのリポジトリを読める必要がある**。
+GitHub Actions の既定の `GITHUB_TOKEN` は同じ組織の別 private リポジトリを読めないため、
+private のままだと全プロジェクトの CI に PAT を Secret として配る運用が必要になる。
+展開先が13リポジトリに増えるとその管理コストが見合わないため public にしている。
+
+公開しているのは gulp のビルド定義とバージョン固定だけで、顧客情報・素材・サイトの
+中身は含まれない。
+
+依存の指定は `git+https://` を明示する。`github:` 短縮形でも動くが、意図を明示しておく。
+
+認証情報なし・SSH 不可の状態で `npm ci` が成功することを確認済み（lockfile の
+`resolved` は npm の仕様で `git+ssh://` になるが、public なら匿名 HTTPS で解決される）。
 
 ## CI での注意
 
