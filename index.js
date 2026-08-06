@@ -75,8 +75,26 @@ const resolveGulp = () => {
   return require(resolved);
 };
 
+// この環境変数が立っている間は、オプションを解決したところで止めて
+// タスクを登録しない。pre-commit の CLI が gulpfile.js から exclude を
+// 読むための経路で、gulp も browser-sync も読み込まずに済ませるためにある
+// （lib/project-options.js が使う）。
+const OPTIONS_ONLY_ENV = 'LP_BUILD_OPTIONS_ONLY';
+
+// 最後に解決したオプション。CLI は gulpfile.js を読み込んだ後にこれを取る。
+//
+// 置き場所を global にしているのは、シンボリックリンク経由の解決などで
+// このファイルが二重に読み込まれても値を共有できるようにするため。
+// resolveGulp が gulp の二重インスタンス化を避けているのと同じ理由で、
+// パッケージ内の module スコープは同一性を前提にできない。
+const LAST_OPTIONS = Symbol.for('@highpace/lp-build.lastResolvedOptions');
+
 module.exports = function register(options) {
   const opts = resolveOptions(options);
+  global[LAST_OPTIONS] = opts;
+
+  if (process.env[OPTIONS_ONLY_ENV] === '1') return;
+
   assertBrowserslist();
 
   const gulp = resolveGulp();
@@ -88,3 +106,5 @@ module.exports = function register(options) {
 
 module.exports.resolveOptions = resolveOptions;
 module.exports.assertBrowserslist = assertBrowserslist;
+module.exports.OPTIONS_ONLY_ENV = OPTIONS_ONLY_ENV;
+module.exports.lastResolvedOptions = () => global[LAST_OPTIONS] || null;

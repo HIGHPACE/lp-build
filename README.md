@@ -33,7 +33,7 @@ autoprefixer）、画像圧縮、webp 生成、BrowserSync による監視を提
   },
   "devDependencies": {
     "gulp": "4.0.2",
-    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.2.0"
+    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.2.1"
   }
 }
 ```
@@ -132,8 +132,14 @@ require('@highpace/lp-build')({
 });
 ```
 
-`css` / `css:min` / `css:staged` の対象と watch の監視グロブの両方に効く。除外した
-ディレクトリを保存しても何も起きない。
+`css` / `css:min` / `css:staged` の対象と watch の監視グロブ、それに pre-commit の
+CLI（`lp-build-scss-targets`）すべてに効く。除外したディレクトリを保存しても
+何も起きない。
+
+**`.gitignore` 済みでも `exclude` は必要。** グロブはディスクを見るため、git 管理外でも
+ローカルに存在すればコンパイル対象になる。パーシャルが欠落していれば
+`Can't find stylesheet to import.` でビルドが落ちる。CI（クリーンチェックアウト）は
+通るのにローカルの `npm run build:css` だけが失敗する、という形で出る。
 
 **プロジェクト単位の除外を復活させるものではない。** かつて `gulpfile.js` に
 `!./shinshade/**` のような除外があり、そこだけ拡張任せになって差分の再発源になっていた。
@@ -190,7 +196,7 @@ v1.2.0 では `.min.css.map` もコミットする。v1.1.x のときに `*.min.
 
 ```bash
 npm ci                    # 画像タスクを試すなら --ignore-scripts を付けない
-npm test                  # node --test（css / exclude / scss-targets / images / index）
+npm test                  # node --test（css / exclude / scss-targets / images / index / project-options）
 node test/webp-smoke.js   # sharp が webp を出力できることの確認
 ```
 
@@ -229,3 +235,12 @@ v1.2.0 で変えた点。
 
 - **圧縮形 `.min.css` にもソースマップを付けるようにした**。`.min.css` を参照している
   ページで devtools から SCSS を追えなかったため。open-lp では `.min.css.map` が43件増える
+
+v1.2.1 で修正した点。
+
+- **pre-commit の CLI が `exclude` を無視していた**。CLI は gulp のタスクを通らないため
+  `gulpfile.js` のオプションを知らず、除外したディレクトリの SCSS をコミットすると
+  生成されない `.css.map` を `git add` しようとして pre-commit が失敗し、そのファイルを
+  コミットできなくなっていた（sbivc の `lp02-b/` で実測）。CLI が `gulpfile.js` を
+  読み込んで `exclude` を取るようにした。読み込み時はタスク登録をスキップするため
+  gulp と browser-sync は読み込まれない
