@@ -33,7 +33,7 @@ autoprefixer）、画像圧縮、webp 生成、BrowserSync による監視を提
   },
   "devDependencies": {
     "gulp": "4.0.2",
-    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.1.0"
+    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.1.1"
   }
 }
 ```
@@ -96,10 +96,21 @@ SCSS は `['./**/*.scss', '!./**/_*.scss', '!./node_modules/**']` の1本で全�
 生成した `.css.map` は**コミットする**。コミットしないと、CSS 末尾の
 `sourceMappingURL` コメントが参照先の無い状態になり、devtools で 404 警告が出る。
 
-`sources` は `process.cwd()` 基準の相対パスに正規化している。dart-sass は絶対
-`file://` URL を埋め込むため、そのままコミットすると人によって内容が変わり CI が
-全員で落ちる。正規化により2つの異なるディレクトリでビルドしても同一になる
-（open-lp の105件で確認済み）。
+`sources` は **マップファイルのあるディレクトリ基準**の相対パスに正規化している。
+dart-sass は絶対 `file://` URL を埋め込むため、そのままコミットすると人によって内容が
+変わり CI が全員で落ちる。正規化により2つの異なるディレクトリでビルドしても同一になる。
+
+**基準はマップの位置でなければならない。** ブラウザは `sources` をマップの URL からの
+相対として解決するため、`process.cwd()` 基準にすると
+
+```
+css/style.css.map の sources が "a/b/css/style.scss"
+→ /a/b/css/a/b/css/style.scss を取りに行って 404
+```
+
+となり、devtools に架空のフォルダが並んで SCSS を開けなくなる（v1.1.0 で実際に起きた）。
+マップのディレクトリ基準なら `style.scss` になり正しく解決できる。テストで
+「解決先が実在すること」を固定してある。
 
 `sourcesContent` は埋め込まない（リポジトリに SCSS の中身が二重に入るのを避ける）。
 
@@ -201,3 +212,9 @@ v1.1.0（ソースマップ対応）で追加で確認した事項。
 - 2つの異なるディレクトリでビルドしたマップ105件が完全一致する
 - マップの構造が妥当（`version` が3、`mappings` が空でない、`sources` のファイルが実在）
 - `npm run build:css`（全105件）の実測が 4.06秒
+
+v1.1.1 で修正した点。
+
+- **`sources` の基準をマップのディレクトリに変更**。v1.1.0 は `process.cwd()` 基準で、
+  ブラウザがマップ位置からの相対として解決するため 404 になり、devtools に架空の
+  フォルダが並んで SCSS を開けなかった。「解決先が実在すること」をテストで固定した
