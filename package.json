@@ -1,6 +1,6 @@
 {
   "name": "@highpace/lp-build",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "HIGHPACE のLP制作で共通利用する gulp ビルド定義（SCSS・画像圧縮・webp）",
   "private": true,
   "main": "index.js",
@@ -26,11 +26,10 @@
     "browser-sync": "^2.29.3",
     "gulp-changed": "5.0.4",
     "gulp-imagemin": "7.1.0",
-    "gulp-postcss": "10.0.0",
     "gulp-rename": "2.1.0",
-    "gulp-sass": "6.0.1",
     "imagemin-mozjpeg": "7.0.0",
     "imagemin-pngquant": "5.1.0",
+    "picomatch": "2.3.2",
     "postcss": "8.5.24",
     "sass": "1.69.0",
     "sharp": "0.35.3"

@@ -33,7 +33,7 @@ autoprefixer）、画像圧縮、webp 生成、BrowserSync による監視を提
   },
   "devDependencies": {
     "gulp": "4.0.2",
-    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.0.0"
+    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.1.0"
   }
 }
 ```
@@ -67,10 +67,11 @@ autoprefixer は CSS ファイルのパスから上方向に `package.json` / `.
 | --- | --- | --- | --- |
 | `images` | `'flat'` | ○ | `srcImg/sub/x.jpg` → `img/sub/x.jpg` |
 | `images` | `'perPage'` | | `srcImg/<page>/<type>/x.jpg` → `<page>/<type>/img/x.jpg` |
+| `exclude` | `string[]` | `[]` | コンパイル対象から外すパターン（後述） |
 
 SCSS は `['./**/*.scss', '!./**/_*.scss', '!./node_modules/**']` の1本で全レイアウト
 （`css/`・`assets/css/`・`lp01/assets/css/`・`<page>/<type>/css/`）を賄うため、
-オプションは不要。
+レイアウト指定のオプションは不要。
 
 ### タスク
 
@@ -86,6 +87,42 @@ SCSS は `['./**/*.scss', '!./**/_*.scss', '!./node_modules/**']` の1本で全�
 監視中の SCSS 保存では、保存したファイルに対応するページだけをコンパイルする。
 パーシャル（`_*.scss`）を保存した場合は同じディレクトリのエントリが再生成される。
 どのファイルが対象になったかは `[scss] ...` としてターミナルに表示される。
+
+### ソースマップ
+
+展開形の `.css` にソースマップを付ける。`.min.css` には付けない（本番ページの大半が
+展開形の `.css` を参照しているため、マップが必要なのは展開形だけ）。
+
+生成した `.css.map` は**コミットする**。コミットしないと、CSS 末尾の
+`sourceMappingURL` コメントが参照先の無い状態になり、devtools で 404 警告が出る。
+
+`sources` は `process.cwd()` 基準の相対パスに正規化している。dart-sass は絶対
+`file://` URL を埋め込むため、そのままコミットすると人によって内容が変わり CI が
+全員で落ちる。正規化により2つの異なるディレクトリでビルドしても同一になる
+（open-lp の105件で確認済み）。
+
+`sourcesContent` は埋め込まない（リポジトリに SCSS の中身が二重に入るのを避ける）。
+
+コンパイル時間への影響は、保存1ファイルでは計測誤差の範囲（49ms → 49ms）。
+`npm run build:css`（全105件）の実測は 4.06秒。全件ビルドを回すのは `npm run dev` の
+起動時と CI のときだけ。
+
+### `exclude` オプション
+
+パーシャルが欠落してビルドできない過去の納品物を、コンパイル対象から外す。
+
+```js
+require('@highpace/lp-build')({
+  images: 'flat',
+  exclude: ['納品/**', 'lp02-b/**']
+});
+```
+
+`css` / `css:min` / `css:staged` の対象と watch の監視グロブの両方に効く。除外した
+ディレクトリを保存しても何も起きない。
+
+**プロジェクト単位の除外を復活させるものではない。** かつて `gulpfile.js` に
+`!./shinshade/**` のような除外があり、そこだけ拡張任せになって差分の再発源になっていた。
 
 ### 既存の画像と webp は再生成しない
 
@@ -121,6 +158,9 @@ postinstall 不要）は動くので、CI で CSS の一致を検証する用途
 
 ## バージョンを上げる手順
 
+v1.1.0 以降はソースマップをコミットするため、各プロジェクトの `.gitignore` に
+`*.css.map` があれば削除する。CI の検証対象にも `*.css.map` を含める必要がある。
+
 1. このリポジトリで修正してコミットする
 2. `npm test` が通ることを確認する
 3. `git tag v1.x.y && git push origin main --tags`
@@ -133,7 +173,7 @@ postinstall 不要）は動くので、CI で CSS の一致を検証する用途
 
 ```bash
 npm ci                    # 画像タスクを試すなら --ignore-scripts を付けない
-npm test                  # node --test（scss-targets / images / index / 配線）
+npm test                  # node --test（css / exclude / scss-targets / images / index）
 node test/webp-smoke.js   # sharp が webp を出力できることの確認
 ```
 
@@ -150,3 +190,14 @@ open-lp（SCSS 105エントリ）を対象に実機で確認した。
 - `images` / `webp` が既存を再生成しない。`srcImg` を新しくすると再処理し、
   全ファイルの mtime が揃った状態（新規クローン相当）でも既存を守る
 - プロジェクト側の `overrides` が実際に効く
+
+v1.1.0（ソースマップ対応）で追加で確認した事項。
+
+- **`.min.css` が差分ゼロ**。`gulp-sass` / `gulp-postcss` を外して `sass` / `postcss` の
+  直接呼び出しに変えても、圧縮形の出力は1バイトも変わらない
+- 展開形 `.css` の差分は末尾の `sourceMappingURL` コメント1行のみ。105ファイルすべてで
+  それ以外の差分がゼロ
+- マップ105件に絶対パスが含まれない。`.min.css.map` は生成されない
+- 2つの異なるディレクトリでビルドしたマップ105件が完全一致する
+- マップの構造が妥当（`version` が3、`mappings` が空でない、`sources` のファイルが実在）
+- `npm run build:css`（全105件）の実測が 4.06秒
