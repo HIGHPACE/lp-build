@@ -33,7 +33,7 @@ autoprefixer）、画像圧縮、webp 生成、BrowserSync による監視を提
   },
   "devDependencies": {
     "gulp": "4.0.2",
-    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.1.1"
+    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.2.0"
   }
 }
 ```
@@ -90,8 +90,11 @@ SCSS は `['./**/*.scss', '!./**/_*.scss', '!./node_modules/**']` の1本で全�
 
 ### ソースマップ
 
-展開形の `.css` にソースマップを付ける。`.min.css` には付けない（本番ページの大半が
-展開形の `.css` を参照しているため、マップが必要なのは展開形だけ）。
+展開形の `.css` と圧縮形の `.min.css` の**両方**にソースマップを付ける。
+
+v1.1.x では展開形だけに付けていたが、`.min.css` を参照しているページ（open-lp では
+`careet` / `fudousan` / `mercurop` の12ファイル）で devtools から SCSS を追えなかったため、
+v1.2.0 で圧縮形にも付けるようにした。
 
 生成した `.css.map` は**コミットする**。コミットしないと、CSS 末尾の
 `sourceMappingURL` コメントが参照先の無い状態になり、devtools で 404 警告が出る。
@@ -172,6 +175,9 @@ postinstall 不要）は動くので、CI で CSS の一致を検証する用途
 v1.1.0 以降はソースマップをコミットするため、各プロジェクトの `.gitignore` に
 `*.css.map` があれば削除する。CI の検証対象にも `*.css.map` を含める必要がある。
 
+v1.2.0 では `.min.css.map` もコミットする。v1.1.x のときに `*.min.css.map` を
+`.gitignore` へ入れた場合は撤去すること。
+
 1. このリポジトリで修正してコミットする
 2. `npm test` が通ることを確認する
 3. `git tag v1.x.y && git push origin main --tags`
@@ -218,3 +224,8 @@ v1.1.1 で修正した点。
 - **`sources` の基準をマップのディレクトリに変更**。v1.1.0 は `process.cwd()` 基準で、
   ブラウザがマップ位置からの相対として解決するため 404 になり、devtools に架空の
   フォルダが並んで SCSS を開けなかった。「解決先が実在すること」をテストで固定した
+
+v1.2.0 で変えた点。
+
+- **圧縮形 `.min.css` にもソースマップを付けるようにした**。`.min.css` を参照している
+  ページで devtools から SCSS を追えなかったため。open-lp では `.min.css.map` が43件増える

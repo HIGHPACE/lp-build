@@ -74,15 +74,35 @@ test('マップに SCSS の中身を埋め込まない', async () => {
   });
 });
 
-test('圧縮形は .min.css のみでマップを作らない', async () => {
+test('圧縮形も .min.css と .min.css.map を書き出す', async () => {
   await withFixture(async () => {
     // .min.css が既に存在する場合のみ更新する仕様
     fs.writeFileSync(SCSS_DIR + '/contents.min.css', '');
     const written = await css.compileOne(SCSS, { min: true });
-    assert.deepStrictEqual(written, [SCSS_DIR + '/contents.min.css']);
-    assert.ok(!fs.existsSync(SCSS_DIR + '/contents.min.css.map'));
+    assert.deepStrictEqual(written, [
+      SCSS_DIR + '/contents.min.css',
+      SCSS_DIR + '/contents.min.css.map'
+    ]);
+    assert.ok(fs.existsSync(SCSS_DIR + '/contents.min.css.map'));
     const out = fs.readFileSync(SCSS_DIR + '/contents.min.css', 'utf8');
-    assert.ok(!/sourceMappingURL/.test(out), 'min には sourceMappingURL を付けない');
+    assert.match(out.trim().split('\n').pop(), /sourceMappingURL=contents\.min\.css\.map/);
+  });
+});
+
+test('圧縮形のマップも解決できる相対パスになる', async () => {
+  await withFixture(async () => {
+    fs.writeFileSync(SCSS_DIR + '/contents.min.css', '');
+    const mapPath = SCSS_DIR + '/contents.min.css.map';
+    await css.compileOne(SCSS, { min: true });
+    const map = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+    const mapDir = path.dirname(mapPath);
+    for (const s of map.sources) {
+      assert.ok(!path.isAbsolute(s), `絶対パスが残っている: ${s}`);
+      assert.ok(
+        fs.existsSync(path.normalize(path.join(mapDir, s))),
+        `sources "${s}" がマップ位置から解決できない`
+      );
+    }
   });
 });
 
