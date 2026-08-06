@@ -58,3 +58,14 @@ test('images は flat と perPage のみ許可される', () => {
   assert.throws(() => resolveOptions({ images: 'per-page' }), /images/);
   assert.throws(() => resolveOptions({ images: 'nested' }), /images/);
 });
+
+test('exclude の既定は空配列', () => {
+  assert.deepStrictEqual(resolveOptions().exclude, []);
+  assert.deepStrictEqual(resolveOptions({}).exclude, []);
+});
+
+test('exclude は配列のみ許可される', () => {
+  assert.deepStrictEqual(resolveOptions({ exclude: ['納品/**'] }).exclude, ['納品/**']);
+  assert.throws(() => resolveOptions({ exclude: '納品/**' }), /exclude/);
+  assert.throws(() => resolveOptions({ exclude: 42 }), /exclude/);
+});

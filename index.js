@@ -12,7 +12,7 @@ const images = require('./lib/images');
 const IMAGE_MODES = ['flat', 'perPage'];
 
 const resolveOptions = (options = {}) => {
-  const opts = { images: 'flat', ...options };
+  const opts = { images: 'flat', exclude: [], ...options };
 
   if (!IMAGE_MODES.includes(opts.images)) {
     throw new Error(
@@ -20,6 +20,14 @@ const resolveOptions = (options = {}) => {
         `       指定できるのは ${IMAGE_MODES.join(' か ')} です。\n` +
         `       flat    … srcImg/sub/x.jpg → img/sub/x.jpg\n` +
         `       perPage … srcImg/<page>/<type>/x.jpg → <page>/<type>/img/x.jpg`
+    );
+  }
+
+  if (!Array.isArray(opts.exclude)) {
+    throw new Error(
+      `lp-build: exclude オプションは配列で指定してください: ${JSON.stringify(opts.exclude)}\n` +
+        `       例: exclude: ['納品/**', 'lp02-b/**']\n` +
+        `       パーシャルが欠落してビルドできない過去の納品物を外す用途に限って使う。`
     );
   }
 
@@ -73,7 +81,7 @@ module.exports = function register(options) {
 
   const gulp = resolveGulp();
 
-  css.register(gulp);
+  css.register(gulp, opts);
   images.register(gulp, opts);
   require('./lib/watch').register(gulp, opts);
 };
