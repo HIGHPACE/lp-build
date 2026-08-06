@@ -33,7 +33,7 @@ autoprefixer）、画像圧縮、webp 生成、BrowserSync による監視を提
   },
   "devDependencies": {
     "gulp": "4.0.2",
-    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.0.0"
+    "@highpace/lp-build": "git+https://github.com/HIGHPACE/lp-build.git#v1.1.0"
   }
 }
 ```
@@ -67,10 +67,11 @@ autoprefixer は CSS ファイルのパスから上方向に `package.json` / `.
 | --- | --- | --- | --- |
 | `images` | `'flat'` | ○ | `srcImg/sub/x.jpg` → `img/sub/x.jpg` |
 | `images` | `'perPage'` | | `srcImg/<page>/<type>/x.jpg` → `<page>/<type>/img/x.jpg` |
+| `exclude` | `string[]` | `[]` | コンパイル対象から外すパターン（後述） |
 
 SCSS は `['./**/*.scss', '!./**/_*.scss', '!./node_modules/**']` の1本で全レイアウト
 （`css/`・`assets/css/`・`lp01/assets/css/`・`<page>/<type>/css/`）を賄うため、
-オプションは不要。
+レイアウト指定のオプションは不要。
 
 ### タスク
 
@@ -172,7 +173,7 @@ v1.1.0 以降はソースマップをコミットするため、各プロジェ�
 
 ```bash
 npm ci                    # 画像タスクを試すなら --ignore-scripts を付けない
-npm test                  # node --test（scss-targets / images / index / 配線）
+npm test                  # node --test（css / exclude / scss-targets / images / index）
 node test/webp-smoke.js   # sharp が webp を出力できることの確認
 ```
 
