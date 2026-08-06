@@ -62,14 +62,16 @@ test('空・未定義の入力で例外にならない', () => {
   assert.deepStrictEqual(resolveEntries(undefined), []);
 });
 
-test('cssOutputsFor は .css を常に含め .min.css は既存のみ含める', () => {
+test('cssOutputsFor は .css と .css.map を返し .min.css は既存のみ含める', () => {
   withFixture(
     { 'css/a.scss': '', 'css/a.min.css': '', 'css/b.scss': '' },
     () => {
       assert.deepStrictEqual(cssOutputsFor(['css/a.scss', 'css/b.scss']), [
         'css/a.css',
+        'css/a.css.map',
         'css/a.min.css',
-        'css/b.css'
+        'css/b.css',
+        'css/b.css.map'
       ]);
     }
   );
