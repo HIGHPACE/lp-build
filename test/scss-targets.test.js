@@ -62,6 +62,8 @@ test('空・未定義の入力で例外にならない', () => {
   assert.deepStrictEqual(resolveEntries(undefined), []);
 });
 
+// .min.css は既存の有無にかかわらず生成されるので、出力一覧にも常に載せる。
+// b.scss には .min.css が無いが、コンパイル後には出来ているため。
 test('cssOutputsFor は .css/.min.css とそれぞれの .map を返す', () => {
   withFixture(
     { 'css/a.scss': '', 'css/a.min.css': '', 'css/b.scss': '' },
@@ -72,7 +74,9 @@ test('cssOutputsFor は .css/.min.css とそれぞれの .map を返す', () => 
         'css/a.min.css',
         'css/a.min.css.map',
         'css/b.css',
-        'css/b.css.map'
+        'css/b.css.map',
+        'css/b.min.css',
+        'css/b.min.css.map'
       ]);
     }
   );
