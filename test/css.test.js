@@ -76,8 +76,6 @@ test('マップに SCSS の中身を埋め込まない', async () => {
 
 test('圧縮形も .min.css と .min.css.map を書き出す', async () => {
   await withFixture(async () => {
-    // .min.css が既に存在する場合のみ更新する仕様
-    fs.writeFileSync(SCSS_DIR + '/contents.min.css', '');
     const written = await css.compileOne(SCSS, { min: true });
     assert.deepStrictEqual(written, [
       SCSS_DIR + '/contents.min.css',
@@ -91,7 +89,6 @@ test('圧縮形も .min.css と .min.css.map を書き出す', async () => {
 
 test('圧縮形のマップも解決できる相対パスになる', async () => {
   await withFixture(async () => {
-    fs.writeFileSync(SCSS_DIR + '/contents.min.css', '');
     const mapPath = SCSS_DIR + '/contents.min.css.map';
     await css.compileOne(SCSS, { min: true });
     const map = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
@@ -106,11 +103,19 @@ test('圧縮形のマップも解決できる相対パスになる', async () =>
   });
 });
 
-test('.min.css が無ければ圧縮形は何も書き出さない', async () => {
+// v1.2.x までは .min.css が既に存在するページだけを更新していた。
+// 新規ページでは空の .min.css を手で置くまで生成されず、圧縮形が欠けたまま
+// 気付かれない事故になっていたため、存在しなくても必ず作るようにした。
+test('.min.css が無くても圧縮形を新規に書き出す', async () => {
   await withFixture(async () => {
-    const written = await css.compileOne(SCSS, { min: true });
-    assert.deepStrictEqual(written, []);
     assert.ok(!fs.existsSync(SCSS_DIR + '/contents.min.css'));
+    const written = await css.compileOne(SCSS, { min: true });
+    assert.deepStrictEqual(written, [
+      SCSS_DIR + '/contents.min.css',
+      SCSS_DIR + '/contents.min.css.map'
+    ]);
+    assert.ok(fs.existsSync(SCSS_DIR + '/contents.min.css'));
+    assert.ok(fs.existsSync(SCSS_DIR + '/contents.min.css.map'));
   });
 });
 

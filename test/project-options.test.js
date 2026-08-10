@@ -117,7 +117,12 @@ test('CLI --outputs は除外したディレクトリの出力を含めない', 
     ['lp02-b/assets/css/contents.scss', 'css/contents.scss'],
     () => {
       const outputs = runBin(['--outputs']);
-      assert.deepStrictEqual(outputs, ['css/contents.css', 'css/contents.css.map']);
+      assert.deepStrictEqual(outputs, [
+        'css/contents.css',
+        'css/contents.css.map',
+        'css/contents.min.css',
+        'css/contents.min.css.map'
+      ]);
       assert.ok(!outputs.some((p) => p.startsWith('lp02-b/')));
     }
   );
