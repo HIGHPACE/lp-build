@@ -12,7 +12,7 @@ const images = require('./lib/images');
 const IMAGE_MODES = ['flat', 'perPage'];
 
 const resolveOptions = (options = {}) => {
-  const opts = { images: 'flat', exclude: [], ...options };
+  const opts = { images: 'flat', exclude: [], proxy: null, ...options };
 
   if (!IMAGE_MODES.includes(opts.images)) {
     throw new Error(
@@ -29,6 +29,22 @@ const resolveOptions = (options = {}) => {
         `       例: exclude: ['納品/**', 'lp02-b/**']\n` +
         `       パーシャルが欠落してビルドできない過去の納品物を外す用途に限って使う。`
     );
+  }
+
+  // BrowserSync に渡す前に弾く。ホスト名だけを書いた場合 browser-sync は
+  // 相対パスとして解釈してエラーにならず、繋がらない理由が分からなくなる。
+  if (opts.proxy !== null && opts.proxy !== undefined) {
+    if (typeof opts.proxy !== 'string' || !/^https?:\/\/.+/.test(opts.proxy)) {
+      throw new Error(
+        `lp-build: proxy オプションは http(s):// で始まるURLで指定してください: ${JSON.stringify(opts.proxy)}\n` +
+          `       例: proxy: 'http://musashi-koyama.local'（Local のサイトURL）`
+      );
+    }
+  }
+
+  // { proxy: undefined } を渡された場合、スプレッドで既定の null が消えるため戻す。
+  if (opts.proxy === undefined) {
+    opts.proxy = null;
   }
 
   return opts;
