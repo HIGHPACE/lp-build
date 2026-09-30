@@ -8,6 +8,7 @@ const path = require('node:path');
 
 const css = require('./lib/css');
 const images = require('./lib/images');
+const { SCOPE_ENV, resolveScope } = require('./lib/scope');
 
 const IMAGE_MODES = ['flat', 'perPage'];
 
@@ -105,6 +106,16 @@ const OPTIONS_ONLY_ENV = 'LP_BUILD_OPTIONS_ONLY';
 // パッケージ内の module スコープは同一性を前提にできない。
 const LAST_OPTIONS = Symbol.for('@highpace/lp-build.lastResolvedOptions');
 
+// 環境変数 LP_BUILD_SCOPE を読んで opts.scope（案件ディレクトリの配列か null）を足す。
+// resolveOptions に入れないのは、pre-commit がオプションだけを読む経路
+// （LP_BUILD_OPTIONS_ONLY）でスコープを検証させないため。打ち間違えた
+// スコープのせいで SCSS をコミットできなくなるのを避ける。
+const applyScope = (opts, env = process.env, cwd = process.cwd()) => {
+  const scope = resolveScope(env[SCOPE_ENV], { images: opts.images, cwd });
+  if (scope) console.log(`lp-build: ${SCOPE_ENV}=${scope.join(',')} のみビルド・監視します。`);
+  return { ...opts, scope };
+};
+
 module.exports = function register(options) {
   const opts = resolveOptions(options);
   global[LAST_OPTIONS] = opts;
@@ -113,14 +124,16 @@ module.exports = function register(options) {
 
   assertBrowserslist();
 
+  const scoped = applyScope(opts);
   const gulp = resolveGulp();
 
-  css.register(gulp, opts);
-  images.register(gulp, opts);
-  require('./lib/watch').register(gulp, opts);
+  css.register(gulp, scoped);
+  images.register(gulp, scoped);
+  require('./lib/watch').register(gulp, scoped);
 };
 
 module.exports.resolveOptions = resolveOptions;
+module.exports.applyScope = applyScope;
 module.exports.assertBrowserslist = assertBrowserslist;
 module.exports.OPTIONS_ONLY_ENV = OPTIONS_ONLY_ENV;
 module.exports.lastResolvedOptions = () => global[LAST_OPTIONS] || null;

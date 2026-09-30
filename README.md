@@ -77,6 +77,31 @@ autoprefixer は CSS ファイルのパスから上方向に `package.json` / `.
 
     LP_BUILD_PROXY=http://other.local npm run dev
 
+### ビルド対象を案件で絞る（`LP_BUILD_SCOPE`）
+
+open-lp のように1リポジトリに複数案件が同居しているプロジェクト向け。
+環境変数 `LP_BUILD_SCOPE` に案件ディレクトリを指定すると、一括ビルド
+（`css` / `css:min` / `images` / `webp` / `svgs`）と監視をその案件だけに絞る。
+
+    LP_BUILD_SCOPE=shutocari npm run dev
+    LP_BUILD_SCOPE=shutocari,shinshade npm run dev   # カンマ区切りで複数
+    LP_BUILD_SCOPE=management-base/ops-lp01 npm run dev   # 下の階層も可
+
+指定しなければ従来どおり全案件をビルドする。
+
+- **なぜ必要か**：全案件のビルドは、別ブランチにしか無い `srcImg/<案件>/` から
+  画像を生成して未追跡ファイルとして残す。その状態で `git switch` すると Git が
+  「未追跡ファイルを上書きしてしまう」と言って切り替えを拒否する。使わない案件の
+  ビルドで起動も遅くなる
+- **`gulpfile.js` のオプションにしない理由**：絞りたい案件は担当者ごとに違い、
+  書くとコミットに無関係な差分が混ざる（`LP_BUILD_PROXY` と同じ）
+- 存在しないディレクトリ、`..` やグロブ文字を含む値はエラーで止まる。打ち間違えると
+  何もビルドされないのに気付けないため
+- `images: 'perPage'` のプロジェクト専用。`flat` は1リポジトリ1案件の構成なので
+  エラーにする
+- `css:staged`（pre-commit）は絞らない。ステージされた SCSS がそのまま対象になる
+- `exclude` とは別物。`exclude` はビルドできない過去の納品物を外す用途に限る
+
 SCSS は `['./**/*.scss', '!./**/_*.scss', '!./node_modules/**']` の1本で全レイアウト
 （`css/`・`assets/css/`・`lp01/assets/css/`・`<page>/<type>/css/`）を賄うため、
 レイアウト指定のオプションは不要。
@@ -211,7 +236,7 @@ v1.2.0 では `.min.css.map` もコミットする。v1.1.x のときに `*.min.
 
 ```bash
 npm ci                    # 画像タスクを試すなら --ignore-scripts を付けない
-npm test                  # node --test（css / exclude / scss-targets / images / index / project-options）
+npm test                  # node --test（css / exclude / scss-targets / images / index / project-options / proxy / scope）
 node test/webp-smoke.js   # sharp が webp を出力できることの確認
 ```
 
