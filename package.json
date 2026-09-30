@@ -1,6 +1,6 @@
 {
   "name": "@highpace/lp-build",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "HIGHPACE のLP制作で共通利用する gulp ビルド定義（SCSS・画像圧縮・webp）",
   "private": true,
   "main": "index.js",
