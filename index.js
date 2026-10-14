@@ -10,7 +10,7 @@ const css = require('./lib/css');
 const images = require('./lib/images');
 const { SCOPE_ENV, resolveScope } = require('./lib/scope');
 
-const IMAGE_MODES = ['flat', 'perPage'];
+const IMAGE_MODES = ['flat', 'perPage', 'wordpress'];
 
 const resolveOptions = (options = {}) => {
   const opts = { images: 'flat', exclude: [], proxy: null, ...options };
@@ -18,9 +18,10 @@ const resolveOptions = (options = {}) => {
   if (!IMAGE_MODES.includes(opts.images)) {
     throw new Error(
       `lp-build: images オプションが不正です: ${JSON.stringify(opts.images)}\n` +
-        `       指定できるのは ${IMAGE_MODES.join(' か ')} です。\n` +
-        `       flat    … srcImg/sub/x.jpg → img/sub/x.jpg\n` +
-        `       perPage … srcImg/<page>/<type>/x.jpg → <page>/<type>/img/x.jpg`
+        `       指定できるのは ${IMAGE_MODES.join(' / ')} です。\n` +
+        `       flat      … srcImg/sub/x.jpg → img/sub/x.jpg\n` +
+        `       perPage   … srcImg/<page>/<type>/x.jpg → <page>/<type>/img/x.jpg\n` +
+        `       wordpress … srcImg/sub/x.jpg → assets/img/sub/x.jpg`
     );
   }
 

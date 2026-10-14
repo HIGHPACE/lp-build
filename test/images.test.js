@@ -13,3 +13,9 @@ test('perPage はページディレクトリ配下の img/ に置く', () => {
   assert.strictEqual(toDestDir('mercurop/type_h_1', 'perPage'), 'mercurop/type_h_1/img');
   assert.strictEqual(toDestDir('careet/lp', 'perPage'), 'careet/lp/img');
 });
+
+test('wordpress は assets/img/ の下に srcImg の相対パスをそのまま置く', () => {
+  assert.strictEqual(toDestDir('.', 'wordpress'), 'assets/img');
+  assert.strictEqual(toDestDir('top', 'wordpress'), 'assets/img/top');
+  assert.strictEqual(toDestDir('a/b', 'wordpress'), 'assets/img/a/b');
+});

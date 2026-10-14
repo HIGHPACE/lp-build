@@ -53,10 +53,12 @@ test('images の既定は flat', () => {
   assert.strictEqual(resolveOptions({}).images, 'flat');
 });
 
-test('images は flat と perPage のみ許可される', () => {
+test('images は flat / perPage / wordpress のみ許可される', () => {
   assert.strictEqual(resolveOptions({ images: 'perPage' }).images, 'perPage');
+  assert.strictEqual(resolveOptions({ images: 'wordpress' }).images, 'wordpress');
   assert.throws(() => resolveOptions({ images: 'per-page' }), /images/);
   assert.throws(() => resolveOptions({ images: 'nested' }), /images/);
+  assert.throws(() => resolveOptions({ images: 'wp' }), /images/);
 });
 
 test('exclude の既定は空配列', () => {
