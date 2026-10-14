@@ -67,8 +67,19 @@ autoprefixer は CSS ファイルのパスから上方向に `package.json` / `.
 | --- | --- | --- | --- |
 | `images` | `'flat'` | ○ | `srcImg/sub/x.jpg` → `img/sub/x.jpg` |
 | `images` | `'perPage'` | | `srcImg/<page>/<type>/x.jpg` → `<page>/<type>/img/x.jpg` |
+| `images` | `'wordpress'` | | `srcImg/sub/x.jpg` → `assets/img/sub/x.jpg` |
 | `exclude` | `string[]` | `[]` | コンパイル対象から外すパターン（後述） |
 | `proxy` | `string` | `'http://localhost:8000'` | BrowserSync の proxy 先。WordPress テーマ案件では Local のサイトURL（`http://<site>.local`）を指定する。環境変数 `LP_BUILD_PROXY` が優先される |
+
+### WordPress テーマ案件は `images: 'wordpress'`
+
+テーマの CSS は `url("../img/…")` で `assets/img` を参照する。`flat` のまま使うと
+**出力先（`img/`）と参照先（`assets/img/`）が食い違い**、素材を差し替えるたびに
+手でコピーする運用になる。それは必ず忘れるので、出力先ごと合わせる。
+
+```js
+require('@highpace/lp-build')({ images: 'wordpress', proxy: 'http://xxx.local' });
+```
 
 `proxy` を指定しない静的LPは従来どおり `http://localhost:8000` を見る。既定値を
 変えていないため既存プロジェクトへの影響は無い。
